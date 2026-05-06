@@ -1,7 +1,15 @@
 const Home = () => {
+
   return (
-    <div>
+
+    <div className="page">
+
       <h1>Bus Booking System</h1>
+
+      <p>
+        Welcome to the Bus Management System
+      </p>
+
     </div>
   );
 };
