@@ -4,6 +4,12 @@ import com.spring.bms.dto.UserDto;
 import com.spring.bms.entity.User;
 import com.spring.bms.mapper.UserMapper;
 import com.spring.bms.repository.UserRepository;
+import com.spring.bms.dto.AuthResponse;
+import com.spring.bms.dto.LoginRequest;
+import com.spring.bms.security.JWTService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +22,50 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
+
+    // Register
+    public AuthResponse register(UserDto userDto) {
+        if(userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists");
+        }
+        User user = UserMapper.toEntity(userDto);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getRole() == null) {
+            user.setRole(com.spring.bms.entity.Role.USER);
+        }
+        
+        User savedUser = userRepository.save(user);
+        String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole());
+        
+        return AuthResponse.builder()
+                .token(token)
+                .email(savedUser.getEmail())
+                .name(savedUser.getName())
+                .role(savedUser.getRole())
+                .build();
+    }
+
+    // Login
+    public AuthResponse login(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+        
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+        
+        return AuthResponse.builder()
+                .token(token)
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole())
+                .build();
+    }
 
     // Create
     public UserDto saveUser(UserDto userDto) {
