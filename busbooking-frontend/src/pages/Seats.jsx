@@ -1,132 +1,110 @@
 import { useEffect, useState } from "react";
-
-import {
-  getAllSeats,
-  createSeat,
-  updateSeat,
-  deleteSeat
-} from "../services/seatService";
+import { getAllSeats, createSeat, deleteSeat } from "../services/seatService";
+import { getAllBuses } from "../services/busService";
 
 const Seats = () => {
-
   const [seats, setSeats] = useState([]);
-
-  const [editingId, setEditingId] = useState(null);
+  const [buses, setBuses] = useState([]);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     busId: "",
     seatNumber: "",
-    booked: false
+    isBooked: false
   });
 
   useEffect(() => {
     fetchSeats();
+    fetchBuses();
   }, []);
 
   const fetchSeats = async () => {
-
     try {
-
       const response = await getAllSeats();
-
       setSeats(response.data);
-
     } catch (error) {
+      console.log(error);
+    }
+  };
 
+  const fetchBuses = async () => {
+    try {
+      const response = await getAllBuses();
+      setBuses(response.data);
+    } catch (error) {
       console.log(error);
     }
   };
 
   const handleChange = (e) => {
-
     const { name, value, type, checked } = e.target;
-
     setFormData({
       ...formData,
-      [name]: type === "checkbox"
-        ? checked
-        : value
+      [name]: type === "checkbox" ? checked : value
     });
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
+    setError("");
 
     try {
-
       const payload = {
-        ...formData,
         busId: Number(formData.busId),
-        seatNumber: Number(formData.seatNumber)
+        seatNumber: Number(formData.seatNumber),
+        // KEY FIX: SeatDto field is "private boolean isBooked"
+        // Jackson reads the field name directly → key must be "isBooked" not "booked"
+        // Sending "booked" → Jackson finds no matching field → null → crash on primitive boolean
+        isBooked: formData.isBooked === true
       };
 
-      if (editingId) {
-
-        await updateSeat(editingId, payload);
-
-        setEditingId(null);
-
-      } else {
-
-        await createSeat(payload);
-      }
-
+      await createSeat(payload);
       fetchSeats();
-
-      setFormData({
-        busId: "",
-        seatNumber: "",
-        booked: false
-      });
+      setFormData({ busId: "", seatNumber: "", isBooked: false });
 
     } catch (error) {
-
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Failed to add seat.";
+      setError(String(msg));
       console.log(error);
     }
   };
 
-  const handleEdit = (seat) => {
-
-    setEditingId(seat.id);
-
-    setFormData({
-      busId: seat.busId,
-      seatNumber: seat.seatNumber,
-      booked: seat.booked
-    });
-  };
-
   const handleDelete = async (id) => {
-
     try {
-
       await deleteSeat(id);
-
       fetchSeats();
-
     } catch (error) {
-
       console.log(error);
     }
   };
 
   return (
-
     <div className="page">
-
       <h1>Seat Management</h1>
+
+      {error && (
+        <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>
+      )}
 
       <form onSubmit={handleSubmit} className="form">
 
-        <input
-          type="number"
+        <select
           name="busId"
-          placeholder="Bus ID"
           value={formData.busId}
           onChange={handleChange}
           required
-        />
+        >
+          <option value="">-- Select Bus --</option>
+          {buses.map((bus) => (
+            <option key={bus.id} value={bus.id}>
+              {bus.busName} ({bus.busNumber}) — ID: {bus.id}
+            </option>
+          ))}
+        </select>
 
         <input
           type="number"
@@ -138,65 +116,29 @@ const Seats = () => {
         />
 
         <label>
-
           Booked
-
           <input
             type="checkbox"
-            name="booked"
-            checked={formData.booked}
+            name="isBooked"
+            checked={formData.isBooked}
             onChange={handleChange}
           />
-
         </label>
 
-        <button type="submit">
-
-          {editingId ? "Update Seat" : "Add Seat"}
-
-        </button>
-
+        <button type="submit">Add Seat</button>
       </form>
 
       <div className="card-container">
-
-        {
-          seats.map((seat) => (
-
-            <div key={seat.id} className="card">
-
-              <h3>Seat {seat.seatNumber}</h3>
-
-              <p>Bus ID: {seat.busId}</p>
-
-              <p>
-                {seat.booked
-                  ? "Booked"
-                  : "Available"}
-              </p>
-
-              <div className="btn-group">
-
-                <button
-                  onClick={() => handleEdit(seat)}
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(seat.id)}
-                >
-                  Delete
-                </button>
-
-              </div>
-
-            </div>
-          ))
-        }
-
+        {seats.map((seat) => (
+          <div key={seat.id} className="card">
+            <h3>Seat {seat.seatNumber}</h3>
+            <p>Bus ID: {seat.busId}</p>
+            {/* Response JSON has "booked" key (from Lombok getter isBooked()) */}
+            <p>{seat.booked ? "Booked" : "Available"}</p>
+            <button onClick={() => handleDelete(seat.id)}>Delete</button>
+          </div>
+        ))}
       </div>
-
     </div>
   );
 };
