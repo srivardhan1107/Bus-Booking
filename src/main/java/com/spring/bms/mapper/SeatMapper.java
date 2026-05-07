@@ -5,19 +5,24 @@ import com.spring.bms.entity.Bus;
 import com.spring.bms.entity.Seat;
 
 public class SeatMapper {
-	public static SeatDto toDTO(Seat seat) {
-        if (seat == null) return null;
+
+    public static SeatDto toDTO(Seat seat) {
+
+        if (seat == null)
+            return null;
 
         return SeatDto.builder()
                 .id(seat.getId())
                 .busId(seat.getBus().getId())
                 .seatNumber(seat.getSeatNumber())
-                .isBooked(seat.isBooked())
+                .booked(seat.isBooked())
                 .build();
     }
 
     public static Seat toEntity(SeatDto dto) {
-        if (dto == null) return null;
+
+        if (dto == null)
+            return null;
 
         Bus bus = new Bus();
         bus.setId(dto.getBusId());
@@ -26,7 +31,7 @@ public class SeatMapper {
                 .id(dto.getId())
                 .bus(bus)
                 .seatNumber(dto.getSeatNumber())
-                .isBooked(dto.isBooked())
+                .booked(dto.isBooked())
                 .build();
     }
 }

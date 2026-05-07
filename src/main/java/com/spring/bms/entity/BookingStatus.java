@@ -1,6 +1,7 @@
 package com.spring.bms.entity;
 
 public enum BookingStatus {
-	 CONFIRMED,
-	    CANCELLED
+	BOOKED,
+    CONFIRMED,
+    CANCELLED
 }

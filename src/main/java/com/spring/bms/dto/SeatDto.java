@@ -1,10 +1,11 @@
 package com.spring.bms.dto;
 
 
+
+
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,7 +15,7 @@ public class SeatDto {
 
     private Long busId;
 
-    private int seatNumber;
+    private Integer seatNumber;
 
-    private boolean isBooked;
+    private boolean booked;
 }
