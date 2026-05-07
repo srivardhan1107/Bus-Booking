@@ -33,5 +33,5 @@ public class Seat {
     private Integer seatNumber;
 
     @Column(name = "is_booked")
-    private boolean booked;
+    private Boolean booked;
 }

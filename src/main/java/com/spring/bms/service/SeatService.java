@@ -61,7 +61,7 @@ public class SeatService {
 
         existingSeat.setBus(bus);
         existingSeat.setSeatNumber(seatDto.getSeatNumber());
-        existingSeat.setBooked(seatDto.isBooked());
+        existingSeat.setBooked(seatDto.getBooked());
 
         Seat updatedSeat = seatRepository.save(existingSeat);
 

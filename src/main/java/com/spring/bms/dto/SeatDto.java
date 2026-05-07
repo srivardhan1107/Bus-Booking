@@ -1,8 +1,5 @@
 package com.spring.bms.dto;
 
-
-
-
 import lombok.*;
 
 @Data
@@ -17,5 +14,5 @@ public class SeatDto {
 
     private Integer seatNumber;
 
-    private boolean booked;
+    private Boolean booked;
 }
